@@ -175,6 +175,430 @@
 <div id="toast" class="toast"></div>
 <div id="modal" class="modal hidden"><div class="modal-box"><h2>Transaction confirmation</h2><div id="modalBody"></div><div class="actions"><button id="modalCancel">Cancel</button><button id="modalConfirm" class="primary">Confirm</button></div></div></div>
 <script src="https://cdn.jsdelivr.net/npm/ethers@6.15.0/dist/ethers.umd.min.js"></script>
-<script type="module" src="./app.js"></script>
+<script>
+(() => {
+  "use strict";
+
+  const AMOY_CHAIN_ID = 80002;
+  const AMOY_HEX = "0x13882";
+
+  const $ = (id) => document.getElementById(id);
+  const toast = (msg, ok = true) => {
+    const el = $("toast");
+    if (!el) return;
+    el.textContent = msg;
+    el.className = "toast show " + (ok ? "ok" : "error");
+    clearTimeout(window.__toastTimer);
+    window.__toastTimer = setTimeout(() => {
+      el.className = "toast";
+    }, 3500);
+  };
+
+  // -----------------------------
+  // TAB NAVIGATION
+  // -----------------------------
+  function activateTab(tabId) {
+    document.querySelectorAll(".tab").forEach((tab) => {
+      tab.classList.toggle("active", tab.id === tabId);
+    });
+    document.querySelectorAll(".nav[data-tab]").forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.tab === tabId);
+    });
+    history.replaceState(null, "", "#" + tabId);
+  }
+
+  document.querySelectorAll(".nav[data-tab]").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      activateTab(btn.dataset.tab);
+    });
+  });
+
+  const initialTab = location.hash.replace("#", "");
+  activateTab(
+    document.getElementById(initialTab) ? initialTab : "dashboard"
+  );
+
+  // -----------------------------
+  // WALLET / NETWORK
+  // -----------------------------
+  let provider = null;
+  let signer = null;
+  let account = null;
+
+  function setSafety(message = "", danger = false) {
+    const banner = $("safetyBanner");
+    if (!banner) return;
+    if (!message) {
+      banner.textContent = "";
+      banner.className = "safety hidden";
+      return;
+    }
+    banner.textContent = message;
+    banner.className = "safety " + (danger ? "danger" : "");
+  }
+
+  function shortAddress(address) {
+    return address ? address.slice(0, 6) + "…" + address.slice(-4) : "Not connected";
+  }
+
+  function setWalletUI(address, chainId) {
+    account = address || null;
+
+    if ($("walletAddress")) $("walletAddress").textContent = address ? shortAddress(address) : "Not connected";
+    if ($("networkName")) $("networkName").textContent =
+      chainId === AMOY_CHAIN_ID ? "Polygon Amoy" :
+      chainId ? "Wrong network (" + chainId + ")" : "—";
+
+    if ($("networkBadge")) {
+      $("networkBadge").textContent =
+        chainId === AMOY_CHAIN_ID ? "Polygon Amoy" :
+        address ? "Wrong network" : "Not connected";
+      $("networkBadge").className =
+        "badge " + (chainId === AMOY_CHAIN_ID ? "ok" : "warn");
+    }
+
+    if ($("connectBtn")) {
+      $("connectBtn").textContent = address ? shortAddress(address) : "Connect Wallet";
+      $("connectBtn").classList.toggle("connected", !!address);
+    }
+  }
+
+  async function getChainId() {
+    if (!window.ethereum) return null;
+    const hex = await window.ethereum.request({ method: "eth_chainId" });
+    return parseInt(hex, 16);
+  }
+
+  async function switchToAmoy() {
+    if (!window.ethereum) throw new Error("No wallet detected. Install MetaMask or another EVM wallet.");
+    try {
+      await window.ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: AMOY_HEX }]
+      });
+    } catch (err) {
+      // 4902 = chain not added
+      if (err && err.code === 4902) {
+        await window.ethereum.request({
+          method: "wallet_addEthereumChain",
+          params: [{
+            chainId: AMOY_HEX,
+            chainName: "Polygon Amoy",
+            nativeCurrency: { name: "POL", symbol: "POL", decimals: 18 },
+            rpcUrls: ["https://rpc-amoy.polygon.technology"],
+            blockExplorerUrls: ["https://amoy.polygonscan.com"]
+          }]
+        });
+      } else {
+        throw err;
+      }
+    }
+  }
+
+  async function connectWallet() {
+    if (!window.ethereum) {
+      setSafety("No EVM wallet detected. Install MetaMask or another compatible wallet.", true);
+      toast("Wallet not detected", false);
+      return;
+    }
+
+    try {
+      const accounts = await window.ethereum.request({
+        method: "eth_requestAccounts"
+      });
+
+      if (!accounts || !accounts.length) {
+        throw new Error("No wallet account was returned.");
+      }
+
+      const chainId = await getChainId();
+
+      if (chainId !== AMOY_CHAIN_ID) {
+        setWalletUI(accounts[0], chainId);
+        setSafety("Wrong network. Catalyst is configured for Polygon Amoy (chain ID 80002).", true);
+
+        const wantsSwitch = window.confirm(
+          "Catalyst requires Polygon Amoy (80002).\n\nSwitch your wallet to Polygon Amoy now?"
+        );
+
+        if (wantsSwitch) {
+          await switchToAmoy();
+        }
+      }
+
+      const finalChain = await getChainId();
+      provider = new ethers.BrowserProvider(window.ethereum);
+      signer = await provider.getSigner();
+      const finalAccounts = await provider.send("eth_accounts", []);
+
+      setWalletUI(finalAccounts[0] || accounts[0], finalChain);
+
+      if (finalChain === AMOY_CHAIN_ID) {
+        setSafety("");
+        toast("Wallet connected");
+        await refreshWallet();
+      } else {
+        setSafety("Wrong network. Please switch to Polygon Amoy (80002).", true);
+      }
+    } catch (err) {
+      console.error("Connect wallet error:", err);
+      setSafety(err?.message || "Wallet connection failed.", true);
+      toast("Wallet connection failed", false);
+    }
+  }
+
+  async function refreshWallet() {
+    if (!window.ethereum || !account || !provider) return;
+
+    try {
+      const network = await provider.getNetwork();
+      const chainId = Number(network.chainId);
+
+      setWalletUI(account, chainId);
+
+      if (chainId !== AMOY_CHAIN_ID) {
+        setSafety("Wrong network. Catalyst requires Polygon Amoy (80002).", true);
+        return;
+      }
+
+      // If a token address has been configured, show the actual CATA balance.
+      const token = $("cfgToken")?.value?.trim();
+      if (token && ethers.isAddress(token)) {
+        const abi = [
+          "function balanceOf(address) view returns (uint256)",
+          "function symbol() view returns (string)",
+          "function decimals() view returns (uint8)"
+        ];
+        try {
+          const cata = new ethers.Contract(token, abi, provider);
+          const [bal, symbol, decimals] = await Promise.all([
+            cata.balanceOf(account),
+            cata.symbol().catch(() => "CATA"),
+            cata.decimals().catch(() => 18)
+          ]);
+          const formatted = ethers.formatUnits(bal, decimals);
+          if ($("cataBalance")) $("cataBalance").textContent = formatted + " " + symbol;
+          if ($("heroBalance")) $("heroBalance").textContent = formatted;
+        } catch (e) {
+          console.warn("CATA balance read failed:", e);
+        }
+      }
+    } catch (err) {
+      console.warn("Wallet refresh failed:", err);
+    }
+  }
+
+  $("connectBtn")?.addEventListener("click", connectWallet);
+
+  if (window.ethereum) {
+    window.ethereum.on("accountsChanged", async (accounts) => {
+      if (!accounts.length) {
+        provider = null;
+        signer = null;
+        setWalletUI(null, null);
+        setSafety("");
+        toast("Wallet disconnected");
+        return;
+      }
+      try {
+        provider = new ethers.BrowserProvider(window.ethereum);
+        signer = await provider.getSigner();
+        account = accounts[0];
+        const chainId = await getChainId();
+        setWalletUI(account, chainId);
+        if (chainId !== AMOY_CHAIN_ID) {
+          setSafety("Wrong network. Catalyst requires Polygon Amoy (80002).", true);
+        } else {
+          setSafety("");
+        }
+        await refreshWallet();
+      } catch (e) {
+        console.error(e);
+      }
+    });
+
+    window.ethereum.on("chainChanged", async () => {
+      try {
+        provider = new ethers.BrowserProvider(window.ethereum);
+        const accounts = await provider.send("eth_accounts", []);
+        const chainId = await getChainId();
+        setWalletUI(accounts[0] || null, chainId);
+        if (chainId !== AMOY_CHAIN_ID) {
+          setSafety("Wrong network. Catalyst requires Polygon Amoy (80002).", true);
+        } else {
+          setSafety("");
+          if (accounts[0]) {
+            signer = await provider.getSigner();
+            await refreshWallet();
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    });
+  }
+
+  // -----------------------------
+  // DEPLOYMENT SETTINGS
+  // -----------------------------
+  const configKeys = {
+    chainId: "catalyst_chain_id",
+    token: "catalyst_token",
+    registry: "catalyst_registry",
+    staking: "catalyst_staking",
+    governance: "catalyst_governance",
+    treasury: "catalyst_treasury",
+    guardian: "catalyst_guardian"
+  };
+
+  function loadConfig() {
+    const defaults = {
+      chainId: localStorage.getItem(configKeys.chainId) || "80002",
+      token: localStorage.getItem(configKeys.token) || "",
+      registry: localStorage.getItem(configKeys.registry) || "",
+      staking: localStorage.getItem(configKeys.staking) || "",
+      governance: localStorage.getItem(configKeys.governance) || "",
+      treasury: localStorage.getItem(configKeys.treasury) || "",
+      guardian: localStorage.getItem(configKeys.guardian) || ""
+    };
+
+    if ($("cfgChainId")) $("cfgChainId").value = defaults.chainId;
+    if ($("cfgToken")) $("cfgToken").value = defaults.token;
+    if ($("cfgRegistry")) $("cfgRegistry").value = defaults.registry;
+    if ($("cfgStaking")) $("cfgStaking").value = defaults.staking;
+    if ($("cfgGovernance")) $("cfgGovernance").value = defaults.governance;
+    if ($("cfgTreasury")) $("cfgTreasury").value = defaults.treasury;
+    if ($("cfgGuardian")) $("cfgGuardian").value = defaults.guardian;
+
+    validateDeployment();
+  }
+
+  function saveConfig() {
+    const fields = {
+      chainId: $("cfgChainId")?.value?.trim() || "80002",
+      token: $("cfgToken")?.value?.trim() || "",
+      registry: $("cfgRegistry")?.value?.trim() || "",
+      staking: $("cfgStaking")?.value?.trim() || "",
+      governance: $("cfgGovernance")?.value?.trim() || "",
+      treasury: $("cfgTreasury")?.value?.trim() || "",
+      guardian: $("cfgGuardian")?.value?.trim() || ""
+    };
+
+    for (const [key, value] of Object.entries(fields)) {
+      localStorage.setItem(configKeys[key], value);
+    }
+
+    validateDeployment();
+    toast("Deployment configuration saved");
+    refreshWallet();
+  }
+
+  function clearConfig() {
+    Object.values(configKeys).forEach((key) => localStorage.removeItem(key));
+    loadConfig();
+    toast("Deployment configuration cleared");
+  }
+
+  async function validateDeployment() {
+    const addresses = [
+      ["CATA Token", $("cfgToken")?.value?.trim()],
+      ["Registry", $("cfgRegistry")?.value?.trim()],
+      ["Staking", $("cfgStaking")?.value?.trim()],
+      ["Governance", $("cfgGovernance")?.value?.trim()],
+      ["Treasury", $("cfgTreasury")?.value?.trim()],
+      ["Guardian", $("cfgGuardian")?.value?.trim()]
+    ];
+
+    const list = $("integrityList");
+    if (!list) return;
+
+    list.innerHTML = "";
+
+    let configured = true;
+    for (const [name, address] of addresses) {
+      const valid = !!address && ethers.isAddress(address);
+      if (!valid) configured = false;
+      const row = document.createElement("div");
+      row.innerHTML = (valid ? "✓ " : "✕ ") + name + (valid ? " address configured" : " address missing/invalid");
+      list.appendChild(row);
+    }
+
+    const chainOk = Number($("cfgChainId")?.value || 0) === AMOY_CHAIN_ID;
+    if (!chainOk) configured = false;
+
+    const chainRow = document.createElement("div");
+    chainRow.textContent = (chainOk ? "✓ " : "✕ ") + "Chain ID 80002";
+    list.appendChild(chainRow);
+
+    if ($("integrityStatus")) {
+      $("integrityStatus").textContent = configured ? "Configuration ready" : "Configure addresses";
+      $("integrityStatus").className = "badge " + (configured ? "ok" : "warn");
+    }
+  }
+
+  $("saveConfigBtn")?.addEventListener("click", saveConfig);
+  $("clearConfigBtn")?.addEventListener("click", clearConfig);
+
+  ["cfgChainId","cfgToken","cfgRegistry","cfgStaking","cfgGovernance","cfgTreasury","cfgGuardian"]
+    .forEach(id => $(id)?.addEventListener("input", validateDeployment));
+
+  // -----------------------------
+  // SAFE PLACEHOLDER HANDLERS
+  // -----------------------------
+  // These prevent dead buttons while the contract-specific app logic/ABIs are
+  // being connected. They clearly explain why a transaction is not attempted.
+  const contractButtons = [
+    "stakeTermBtn","stakePermanentBtn","positionReadBtn","harvestBtn","unstakeBtn",
+    "batchTermBtn","batchPermanentBtn","batchHarvestBtn","batchUnstakeBtn",
+    "tierReadBtn","blueFeeBtn","proposalReadBtn","voteForBtn","voteAgainstBtn",
+    "queueBtn","executeBtn","proposeBtn","treasuryRefreshBtn",
+    "recoveryReadBtn","recoveryApproveBtn","recoveryExecuteBtn","recoveryVetoBtn",
+    "recoveryExpireBtn","recoveryProposeBtn"
+  ];
+
+  contractButtons.forEach(id => {
+    $(id)?.addEventListener("click", async () => {
+      if (!account) {
+        toast("Connect your wallet first", false);
+        setSafety("Connect a wallet before using protocol actions.", true);
+        return;
+      }
+      const chainId = await getChainId();
+      if (chainId !== AMOY_CHAIN_ID) {
+        toast("Switch to Polygon Amoy first", false);
+        setSafety("Wrong network. Catalyst requires Polygon Amoy (80002).", true);
+        return;
+      }
+      toast("Wallet connected. Contract action is waiting for the final release ABI/address configuration.", false);
+    });
+  });
+
+  loadConfig();
+
+  // Auto-reconnect if the user already authorized this site.
+  (async () => {
+    try {
+      if (!window.ethereum) return;
+      const accounts = await window.ethereum.request({ method: "eth_accounts" });
+      if (accounts.length) {
+        provider = new ethers.BrowserProvider(window.ethereum);
+        signer = await provider.getSigner();
+        account = accounts[0];
+        const chainId = await getChainId();
+        setWalletUI(account, chainId);
+        if (chainId === AMOY_CHAIN_ID) {
+          setSafety("");
+          await refreshWallet();
+        } else {
+          setSafety("Wrong network. Catalyst requires Polygon Amoy (80002).", true);
+        }
+      }
+    } catch (e) {
+      console.warn("Auto reconnect failed:", e);
+    }
+  })();
+})();
+</script>
 </body>
 </html>
