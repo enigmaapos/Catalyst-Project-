@@ -1,0 +1,14 @@
+[
+  "function getActiveGuardians() view returns (address[7])",
+  "function getStandbyGuardians() view returns (address[7])",
+  "function proposeRecovery(address,bytes) returns (uint256)",
+  "function approveRecovery(uint256)",
+  "function batchApproveRecovery(uint256[])",
+  "function executeRecovery(uint256)",
+  "function batchExecuteRecovery(uint256[])",
+  "function vetoRecovery(uint256)",
+  "function markExpired(uint256)",
+  "function getRecoveryState(uint256) view returns (uint8)",
+  "function getRecovery(uint256) view returns (uint256,address,address,bytes32,uint256,address,uint256,uint256,uint256,uint256,uint256,uint256,uint256,bool,bool,bool,bytes)",
+  "function recoveryPayloadKey(address,bytes,uint256) view returns (bytes32)"
+]

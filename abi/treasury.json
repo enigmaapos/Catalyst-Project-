@@ -1,0 +1,7 @@
+[
+  "function availableCATABalance() view returns (uint256)",
+  "function spendCATA(address,uint256,bytes32)",
+  "function batchSpendCATA((address recipient,uint256 amount)[],bytes32)",
+  "function claimBurnerBonus(uint256,uint256,uint256,uint256,bytes32[])",
+  "function batchClaimBurnerBonuses((uint256 epochId,uint256 amount,uint256 netBurn,uint256 qualifyingBlock,bytes32[] proof)[])"
+]

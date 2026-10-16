@@ -1,0 +1,12 @@
+[
+  "function REGISTRATION_FEE() view returns (uint256)",
+  "function UNVERIFIED_ESCROW() view returns (uint256)",
+  "function BLUE_CHIP_WALLET_FEE() view returns (uint256)",
+  "function registerCollection(address)",
+  "function batchRegisterCollections(address[])",
+  "function payBlueChipWalletFee(address)",
+  "function batchPayBlueChipWalletFee(address[])",
+  "function getCollectionTier(address) view returns (uint8)",
+  "function getCollectionMetrics(address) view returns (uint256,uint256,uint256,bool,uint256,bool)",
+  "function isWalletStaking(address,address) view returns (bool)"
+]
