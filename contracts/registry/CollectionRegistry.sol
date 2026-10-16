@@ -44,6 +44,7 @@ contract CollectionRegistry is CatalystUUPS {
     event IncidentFlagChanged(address indexed collection, bool flagged);
     event EscrowSettled(address indexed collection, address indexed recipient, uint256 amount, bool refunded);
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() { _disableInitializers(); }
 
     function initialize(address cata_, address upgradeAuthority_, address governance_) external initializer {

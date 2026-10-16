@@ -1,0 +1,197 @@
+
+
+  BatchGuardianCouncil
+Warning: Potentially unsafe deployment of contracts/recovery/BatchGuardianCouncil.sol:BatchGuardianCouncil
+
+    contracts/recovery/BatchGuardianCouncil.sol:65: Incorrect order of parent initializer calls.
+    - Found initializer calls to parent contracts in the following order: ReentrancyGuardUpgradeable, CatalystUUPS
+    - Expected: CatalystUUPS, ReentrancyGuardUpgradeable
+        Call parent initializers in linearized order
+
+    1) seeds distinct active and standby guardian batches
+Warning: Potentially unsafe deployment of contracts/recovery/BatchGuardianCouncil.sol:BatchGuardianCouncil
+
+    contracts/recovery/BatchGuardianCouncil.sol:65: Incorrect order of parent initializer calls.
+    - Found initializer calls to parent contracts in the following order: ReentrancyGuardUpgradeable, CatalystUUPS
+    - Expected: CatalystUUPS, ReentrancyGuardUpgradeable
+        Call parent initializers in linearized order
+
+    2) requires an active guardian and allowlisted selector to propose recovery
+
+  CATAToken
+    ✔ mints exactly 100m CATA to initial allocation (64ms)
+    ✔ distributes fee with exact conservation and 90/9/1 target
+    ✔ rejects generic role management (55ms)
+
+  CatalystGovernance
+Warning: Potentially unsafe deployment of contracts/governance/CatalystGovernance.sol:CatalystGovernance
+
+    contracts/governance/CatalystGovernance.sol:53: Incorrect order of parent initializer calls.
+    - Found initializer calls to parent contracts in the following order: ReentrancyGuardUpgradeable, CatalystUUPS
+    - Expected: CatalystUUPS, ReentrancyGuardUpgradeable
+        Call parent initializers in linearized order
+
+    3) requires configured staking and minimum proposal weight
+Warning: Potentially unsafe deployment of contracts/governance/CatalystGovernance.sol:CatalystGovernance
+
+    contracts/governance/CatalystGovernance.sol:53: Incorrect order of parent initializer calls.
+    - Found initializer calls to parent contracts in the following order: ReentrancyGuardUpgradeable, CatalystUUPS
+    - Expected: CatalystUUPS, ReentrancyGuardUpgradeable
+        Call parent initializers in linearized order
+
+    4) creates proposals and prevents double voting
+Warning: Potentially unsafe deployment of contracts/governance/CatalystGovernance.sol:CatalystGovernance
+
+    contracts/governance/CatalystGovernance.sol:53: Incorrect order of parent initializer calls.
+    - Found initializer calls to parent contracts in the following order: ReentrancyGuardUpgradeable, CatalystUUPS
+    - Expected: CatalystUUPS, ReentrancyGuardUpgradeable
+        Call parent initializers in linearized order
+
+    5) rejects unauthorized changes to proposal threshold
+
+  CollectionRegistry
+    6) registers a collection as unverified and records escrow
+    7) rejects duplicate registration
+    8) rejects tier changes from unauthorized accounts
+    9) allows governance to change a registered collection tier
+
+
+  3 passing (1s)
+  9 failing
+
+  1) BatchGuardianCouncil
+       seeds distinct active and standby guardian batches:
+     Error: Contract `contracts/recovery/BatchGuardianCouncil.sol:BatchGuardianCouncil` is not upgrade safe
+
+contracts/recovery/BatchGuardianCouncil.sol:61: Contract `BatchGuardianCouncil` has a constructor
+    Define an initializer instead
+    https://zpl.in/upgrades/error-001
+      at assertUpgradeSafe (node_modules/@openzeppelin/upgrades-core/src/validate/query.ts:20:11)
+      at validateImpl (node_modules/@openzeppelin/hardhat-upgrades/src/utils/validate-impl.ts:42:20)
+      at validateProxyImpl (node_modules/@openzeppelin/hardhat-upgrades/src/utils/validate-impl.ts:63:10)
+      at deployProxyImpl (node_modules/@openzeppelin/hardhat-upgrades/src/utils/deploy-impl.ts:72:3)
+      at Proxy.deployProxy (node_modules/@openzeppelin/hardhat-upgrades/src/deploy-proxy.ts:55:28)
+      at setup (test/BatchGuardianCouncil.test.js:11:21)
+      at Context.<anonymous> (test/BatchGuardianCouncil.test.js:21:42)
+
+  2) BatchGuardianCouncil
+       requires an active guardian and allowlisted selector to propose recovery:
+     Error: Contract `contracts/recovery/BatchGuardianCouncil.sol:BatchGuardianCouncil` is not upgrade safe
+
+contracts/recovery/BatchGuardianCouncil.sol:61: Contract `BatchGuardianCouncil` has a constructor
+    Define an initializer instead
+    https://zpl.in/upgrades/error-001
+      at assertUpgradeSafe (node_modules/@openzeppelin/upgrades-core/src/validate/query.ts:20:11)
+      at validateImpl (node_modules/@openzeppelin/hardhat-upgrades/src/utils/validate-impl.ts:42:20)
+      at validateProxyImpl (node_modules/@openzeppelin/hardhat-upgrades/src/utils/validate-impl.ts:63:10)
+      at deployProxyImpl (node_modules/@openzeppelin/hardhat-upgrades/src/utils/deploy-impl.ts:72:3)
+      at Proxy.deployProxy (node_modules/@openzeppelin/hardhat-upgrades/src/deploy-proxy.ts:55:28)
+      at setup (test/BatchGuardianCouncil.test.js:11:21)
+      at Context.<anonymous> (test/BatchGuardianCouncil.test.js:26:47)
+
+  3) CatalystGovernance
+       requires configured staking and minimum proposal weight:
+     Error: Contract `contracts/governance/CatalystGovernance.sol:CatalystGovernance` is not upgrade safe
+
+contracts/governance/CatalystGovernance.sol:49: Contract `CatalystGovernance` has a constructor
+    Define an initializer instead
+    https://zpl.in/upgrades/error-001
+      at assertUpgradeSafe (node_modules/@openzeppelin/upgrades-core/src/validate/query.ts:20:11)
+      at validateImpl (node_modules/@openzeppelin/hardhat-upgrades/src/utils/validate-impl.ts:42:20)
+      at validateProxyImpl (node_modules/@openzeppelin/hardhat-upgrades/src/utils/validate-impl.ts:63:10)
+      at deployProxyImpl (node_modules/@openzeppelin/hardhat-upgrades/src/utils/deploy-impl.ts:72:3)
+      at Proxy.deployProxy (node_modules/@openzeppelin/hardhat-upgrades/src/deploy-proxy.ts:55:28)
+      at Context.<anonymous> (test/CatalystGovernance.test.js:16:17)
+
+  4) CatalystGovernance
+       creates proposals and prevents double voting:
+     Error: Contract `contracts/governance/CatalystGovernance.sol:CatalystGovernance` is not upgrade safe
+
+contracts/governance/CatalystGovernance.sol:49: Contract `CatalystGovernance` has a constructor
+    Define an initializer instead
+    https://zpl.in/upgrades/error-001
+      at assertUpgradeSafe (node_modules/@openzeppelin/upgrades-core/src/validate/query.ts:20:11)
+      at validateImpl (node_modules/@openzeppelin/hardhat-upgrades/src/utils/validate-impl.ts:42:20)
+      at validateProxyImpl (node_modules/@openzeppelin/hardhat-upgrades/src/utils/validate-impl.ts:63:10)
+      at deployProxyImpl (node_modules/@openzeppelin/hardhat-upgrades/src/utils/deploy-impl.ts:72:3)
+      at Proxy.deployProxy (node_modules/@openzeppelin/hardhat-upgrades/src/deploy-proxy.ts:55:28)
+      at setup (test/CatalystGovernance.test.js:8:17)
+      at Context.<anonymous> (test/CatalystGovernance.test.js:23:46)
+
+  5) CatalystGovernance
+       rejects unauthorized changes to proposal threshold:
+     Error: Contract `contracts/governance/CatalystGovernance.sol:CatalystGovernance` is not upgrade safe
+
+contracts/governance/CatalystGovernance.sol:49: Contract `CatalystGovernance` has a constructor
+    Define an initializer instead
+    https://zpl.in/upgrades/error-001
+      at assertUpgradeSafe (node_modules/@openzeppelin/upgrades-core/src/validate/query.ts:20:11)
+      at validateImpl (node_modules/@openzeppelin/hardhat-upgrades/src/utils/validate-impl.ts:42:20)
+      at validateProxyImpl (node_modules/@openzeppelin/hardhat-upgrades/src/utils/validate-impl.ts:63:10)
+      at deployProxyImpl (node_modules/@openzeppelin/hardhat-upgrades/src/utils/deploy-impl.ts:72:3)
+      at Proxy.deployProxy (node_modules/@openzeppelin/hardhat-upgrades/src/deploy-proxy.ts:55:28)
+      at setup (test/CatalystGovernance.test.js:8:17)
+      at Context.<anonymous> (test/CatalystGovernance.test.js:30:31)
+
+  6) CollectionRegistry
+       registers a collection as unverified and records escrow:
+     Error: Contract `contracts/registry/CollectionRegistry.sol:CollectionRegistry` is not upgrade safe
+
+contracts/registry/CollectionRegistry.sol:47: Contract `CollectionRegistry` has a constructor
+    Define an initializer instead
+    https://zpl.in/upgrades/error-001
+      at assertUpgradeSafe (node_modules/@openzeppelin/upgrades-core/src/validate/query.ts:20:11)
+      at validateImpl (node_modules/@openzeppelin/hardhat-upgrades/src/utils/validate-impl.ts:42:20)
+      at validateProxyImpl (node_modules/@openzeppelin/hardhat-upgrades/src/utils/validate-impl.ts:63:10)
+      at deployProxyImpl (node_modules/@openzeppelin/hardhat-upgrades/src/utils/deploy-impl.ts:72:3)
+      at Proxy.deployProxy (node_modules/@openzeppelin/hardhat-upgrades/src/deploy-proxy.ts:55:28)
+      at setup (test/CollectionRegistry.test.js:11:22)
+      at Context.<anonymous> (test/CollectionRegistry.test.js:20:44)
+
+  7) CollectionRegistry
+       rejects duplicate registration:
+     Error: Contract `contracts/registry/CollectionRegistry.sol:CollectionRegistry` is not upgrade safe
+
+contracts/registry/CollectionRegistry.sol:47: Contract `CollectionRegistry` has a constructor
+    Define an initializer instead
+    https://zpl.in/upgrades/error-001
+      at assertUpgradeSafe (node_modules/@openzeppelin/upgrades-core/src/validate/query.ts:20:11)
+      at validateImpl (node_modules/@openzeppelin/hardhat-upgrades/src/utils/validate-impl.ts:42:20)
+      at validateProxyImpl (node_modules/@openzeppelin/hardhat-upgrades/src/utils/validate-impl.ts:63:10)
+      at deployProxyImpl (node_modules/@openzeppelin/hardhat-upgrades/src/utils/deploy-impl.ts:72:3)
+      at Proxy.deployProxy (node_modules/@openzeppelin/hardhat-upgrades/src/deploy-proxy.ts:55:28)
+      at setup (test/CollectionRegistry.test.js:11:22)
+      at Context.<anonymous> (test/CollectionRegistry.test.js:29:37)
+
+  8) CollectionRegistry
+       rejects tier changes from unauthorized accounts:
+     Error: Contract `contracts/registry/CollectionRegistry.sol:CollectionRegistry` is not upgrade safe
+
+contracts/registry/CollectionRegistry.sol:47: Contract `CollectionRegistry` has a constructor
+    Define an initializer instead
+    https://zpl.in/upgrades/error-001
+      at assertUpgradeSafe (node_modules/@openzeppelin/upgrades-core/src/validate/query.ts:20:11)
+      at validateImpl (node_modules/@openzeppelin/hardhat-upgrades/src/utils/validate-impl.ts:42:20)
+      at validateProxyImpl (node_modules/@openzeppelin/hardhat-upgrades/src/utils/validate-impl.ts:63:10)
+      at deployProxyImpl (node_modules/@openzeppelin/hardhat-upgrades/src/utils/deploy-impl.ts:72:3)
+      at Proxy.deployProxy (node_modules/@openzeppelin/hardhat-upgrades/src/deploy-proxy.ts:55:28)
+      at setup (test/CollectionRegistry.test.js:11:22)
+      at Context.<anonymous> (test/CollectionRegistry.test.js:34:47)
+
+  9) CollectionRegistry
+       allows governance to change a registered collection tier:
+     Error: Contract `contracts/registry/CollectionRegistry.sol:CollectionRegistry` is not upgrade safe
+
+contracts/registry/CollectionRegistry.sol:47: Contract `CollectionRegistry` has a constructor
+    Define an initializer instead
+    https://zpl.in/upgrades/error-001
+      at assertUpgradeSafe (node_modules/@openzeppelin/upgrades-core/src/validate/query.ts:20:11)
+      at validateImpl (node_modules/@openzeppelin/hardhat-upgrades/src/utils/validate-impl.ts:42:20)
+      at validateProxyImpl (node_modules/@openzeppelin/hardhat-upgrades/src/utils/validate-impl.ts:63:10)
+      at deployProxyImpl (node_modules/@openzeppelin/hardhat-upgrades/src/utils/deploy-impl.ts:72:3)
+      at Proxy.deployProxy (node_modules/@openzeppelin/hardhat-upgrades/src/deploy-proxy.ts:55:28)
+      at setup (test/CollectionRegistry.test.js:11:22)
+      at Context.<anonymous> (test/CollectionRegistry.test.js:39:49)
+
+
+

@@ -46,12 +46,13 @@ contract CatalystGovernance is CatalystUUPS, ReentrancyGuardUpgradeable {
     event ProposalQueued(uint256 indexed id, uint64 executeAfter, uint64 expiresAt);
     event ProposalExecuted(uint256 indexed id, address indexed executor);
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() { _disableInitializers(); }
 
     function initialize(address staking_, address upgradeAuthority_) external initializer {
         // Zero is permitted only during staged deployment; setStaking must be called before use.
-        __ReentrancyGuard_init();
         __CatalystUUPS_init(upgradeAuthority_);
+        __ReentrancyGuard_init();
         staking = staking_;
         minimumProposalWeight = 1000 ether;
     }

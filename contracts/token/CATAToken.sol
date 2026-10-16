@@ -32,6 +32,7 @@ contract CATAToken is ERC20Upgradeable, ERC20BurnableUpgradeable, CatalystUUPS {
     event FeeDistributed(address indexed payer, uint256 fee, uint256 burned, uint256 treasuryAmount, uint256 maintainerAmount);
     event VoluntaryBurn(address indexed account, uint256 amount);
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() { _disableInitializers(); }
 
     function initialize(

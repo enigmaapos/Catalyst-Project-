@@ -23,7 +23,7 @@ describe("CATAToken", function () {
     await token.connect(allocation).payFee(fee);
     expect(await token.balanceOf(treasury.address)).to.equal(ethers.parseEther("9"));
     expect(await token.balanceOf(maintainer.address)).to.equal(ethers.parseEther("1"));
-    expect(await token.totalSupply()).to.equal(ethers.parseEther("99999900"));
+    expect(await token.totalSupply()).to.equal(ethers.parseEther("99999910"));
   });
 
   it("rejects generic role management", async function () {

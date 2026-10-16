@@ -58,12 +58,13 @@ contract BatchGuardianCouncil is CatalystUUPS, ReentrancyGuardUpgradeable {
     event GuardianBatchSeeded(bool indexed standbyBatch);
     event TargetAllowlisted(address indexed target, bytes4 indexed selector, bool allowed);
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() { _disableInitializers(); }
 
     function initialize(address upgradeAuthority_, address lastHonestGuardian_) external initializer {
         require(lastHonestGuardian_ != address(0), "zero guardian");
-        __ReentrancyGuard_init();
         __CatalystUUPS_init(upgradeAuthority_);
+        __ReentrancyGuard_init();
         lastHonestGuardian = lastHonestGuardian_;
         nextRecoveryId = 1;
     }
@@ -121,7 +122,7 @@ contract BatchGuardianCouncil is CatalystUUPS, ReentrancyGuardUpgradeable {
         emit RecoveryApproved(id, msg.sender, r.approvals);
         if (r.approvals == 5 && r.executeAfter == 0) {
             r.executeAfter = uint64(block.timestamp + RECOVERY_DELAY);
-            r.expiresAt = r.executeAfter + PROPOSAL_LIFETIME;
+            r.expiresAt = uint64(uint256(r.executeAfter) + PROPOSAL_LIFETIME);
             emit RecoveryProposed(id, r.proposer, r.target, r.calldataHash, r.executeAfter, r.expiresAt);
         }
         if (r.approvals == 6 && !warning) {

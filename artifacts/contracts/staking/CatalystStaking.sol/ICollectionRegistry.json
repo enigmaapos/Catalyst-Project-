@@ -1,0 +1,73 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "ICollectionRegistry",
+  "sourceName": "contracts/staking/CatalystStaking.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "getCollection",
+      "outputs": [
+        {
+          "internalType": "enum ICollectionRegistry.Tier",
+          "name": "tier",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint64",
+          "name": "registeredAt",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint64",
+          "name": "escrowDeadline",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint32",
+          "name": "stakedCount",
+          "type": "uint32"
+        },
+        {
+          "internalType": "uint256",
+          "name": "escrowAmount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "incidentFlag",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "int256",
+          "name": "",
+          "type": "int256"
+        }
+      ],
+      "name": "noteStake",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

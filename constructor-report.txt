@@ -1,0 +1,38 @@
+contracts/registry/CollectionRegistry.sol-44-    event IncidentFlagChanged(address indexed collection, bool flagged);
+contracts/registry/CollectionRegistry.sol-45-    event EscrowSettled(address indexed collection, address indexed recipient, uint256 amount, bool refunded);
+contracts/registry/CollectionRegistry.sol-46-
+contracts/registry/CollectionRegistry.sol:47:    constructor() { _disableInitializers(); }
+contracts/registry/CollectionRegistry.sol-48-
+contracts/registry/CollectionRegistry.sol-49-    function initialize(address cata_, address upgradeAuthority_, address governance_) external initializer {
+contracts/registry/CollectionRegistry.sol-50-        require(cata_ != address(0) && upgradeAuthority_ != address(0), "zero address");
+contracts/registry/CollectionRegistry.sol-51-        cata = IERC20(cata_);
+contracts/registry/CollectionRegistry.sol-52-        governance = governance_;
+contracts/registry/CollectionRegistry.sol-53-        __CatalystUUPS_init(upgradeAuthority_);
+contracts/registry/CollectionRegistry.sol-54-    }
+contracts/registry/CollectionRegistry.sol-55-
+--
+contracts/governance/CatalystGovernance.sol-46-    event ProposalQueued(uint256 indexed id, uint64 executeAfter, uint64 expiresAt);
+contracts/governance/CatalystGovernance.sol-47-    event ProposalExecuted(uint256 indexed id, address indexed executor);
+contracts/governance/CatalystGovernance.sol-48-
+contracts/governance/CatalystGovernance.sol:49:    constructor() { _disableInitializers(); }
+contracts/governance/CatalystGovernance.sol-50-
+contracts/governance/CatalystGovernance.sol-51-    function initialize(address staking_, address upgradeAuthority_) external initializer {
+contracts/governance/CatalystGovernance.sol-52-        // Zero is permitted only during staged deployment; setStaking must be called before use.
+contracts/governance/CatalystGovernance.sol-53-        __ReentrancyGuard_init();
+contracts/governance/CatalystGovernance.sol-54-        __CatalystUUPS_init(upgradeAuthority_);
+contracts/governance/CatalystGovernance.sol-55-        staking = staking_;
+contracts/governance/CatalystGovernance.sol-56-        minimumProposalWeight = 1000 ether;
+contracts/governance/CatalystGovernance.sol-57-    }
+--
+contracts/recovery/BatchGuardianCouncil.sol-58-    event GuardianBatchSeeded(bool indexed standbyBatch);
+contracts/recovery/BatchGuardianCouncil.sol-59-    event TargetAllowlisted(address indexed target, bytes4 indexed selector, bool allowed);
+contracts/recovery/BatchGuardianCouncil.sol-60-
+contracts/recovery/BatchGuardianCouncil.sol:61:    constructor() { _disableInitializers(); }
+contracts/recovery/BatchGuardianCouncil.sol-62-
+contracts/recovery/BatchGuardianCouncil.sol-63-    function initialize(address upgradeAuthority_, address lastHonestGuardian_) external initializer {
+contracts/recovery/BatchGuardianCouncil.sol-64-        require(lastHonestGuardian_ != address(0), "zero guardian");
+contracts/recovery/BatchGuardianCouncil.sol-65-        __ReentrancyGuard_init();
+contracts/recovery/BatchGuardianCouncil.sol-66-        __CatalystUUPS_init(upgradeAuthority_);
+contracts/recovery/BatchGuardianCouncil.sol-67-        lastHonestGuardian = lastHonestGuardian_;
+contracts/recovery/BatchGuardianCouncil.sol-68-        nextRecoveryId = 1;
+contracts/recovery/BatchGuardianCouncil.sol-69-    }

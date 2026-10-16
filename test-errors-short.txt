@@ -1,0 +1,11 @@
+59:  3 passing (1s)
+60:  9 failing
+64:     Error: Contract `contracts/recovery/BatchGuardianCouncil.sol:BatchGuardianCouncil` is not upgrade safe
+79:     Error: Contract `contracts/recovery/BatchGuardianCouncil.sol:BatchGuardianCouncil` is not upgrade safe
+94:     Error: Contract `contracts/governance/CatalystGovernance.sol:CatalystGovernance` is not upgrade safe
+108:     Error: Contract `contracts/governance/CatalystGovernance.sol:CatalystGovernance` is not upgrade safe
+123:     Error: Contract `contracts/governance/CatalystGovernance.sol:CatalystGovernance` is not upgrade safe
+138:     Error: Contract `contracts/registry/CollectionRegistry.sol:CollectionRegistry` is not upgrade safe
+153:     Error: Contract `contracts/registry/CollectionRegistry.sol:CollectionRegistry` is not upgrade safe
+168:     Error: Contract `contracts/registry/CollectionRegistry.sol:CollectionRegistry` is not upgrade safe
+183:     Error: Contract `contracts/registry/CollectionRegistry.sol:CollectionRegistry` is not upgrade safe

@@ -1,0 +1,25 @@
+
+
+  BatchGuardianCouncil
+    ✔ seeds distinct active and standby guardian batches (3551ms)
+    ✔ requires an active guardian and allowlisted selector to propose recovery (44ms)
+
+  CATAToken
+    ✔ mints exactly 100m CATA to initial allocation (52ms)
+    ✔ distributes fee with exact conservation and 90/9/1 target
+    ✔ rejects generic role management
+
+  CatalystGovernance
+    ✔ requires configured staking and minimum proposal weight
+    ✔ creates proposals and prevents double voting (40ms)
+    ✔ rejects unauthorized changes to proposal threshold
+
+  CollectionRegistry
+    ✔ registers a collection as unverified and records escrow (80ms)
+    ✔ rejects duplicate registration (77ms)
+    ✔ rejects tier changes from unauthorized accounts (52ms)
+    ✔ allows governance to change a registered collection tier (70ms)
+
+
+  12 passing (4s)
+

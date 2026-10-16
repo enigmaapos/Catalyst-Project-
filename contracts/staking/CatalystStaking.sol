@@ -8,7 +8,11 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 
-interface ICATAMint { function mintReward(address to, uint256 amount) external; }
+interface ICATAMint {
+    function mintReward(address to, uint256 amount) external;
+    function routeStakingFee(uint256 fee) external;
+    function totalSupply() external view returns (uint256);
+}
 interface ICollectionRegistry {
     enum Tier { NONE, UNVERIFIED, VERIFIED, BLUE_CHIP }
     function getCollection(address) external view returns (
@@ -201,7 +205,7 @@ contract CatalystStaking is CatalystUUPS, IERC721Receiver, ReentrancyGuardUpgrad
         uint256 treasuryAmount = fee * 900 / BPS;
         uint256 maintainerAmount = fee - burned - treasuryAmount;
         // The fee was minted to this contract; token contract applies the immutable split.
-        ICATMint(address(cata)).routeStakingFee(fee);
+        cata.routeStakingFee(fee);
         emit FeeReserveAccrued(fee, burned, treasuryAmount, maintainerAmount);
     }
 
