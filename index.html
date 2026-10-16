@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Catalyst DApp</title>
+<meta name="description" content="Catalyst NFT staking, CATA governance, treasury and decentralized recovery DApp">
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <div class="brand"><div class="logo">C</div><div><strong>CATALYST</strong><span>Universal NFT Utility & Governance</span></div></div>
+    <div class="wallet-area">
+      <span id="networkBadge" class="badge warn">Not connected</span>
+      <button id="connectBtn" class="primary">Connect Wallet</button>
+    </div>
+  </header>
+
+  <div id="safetyBanner" class="safety hidden"></div>
+
+  <main class="layout">
+    <aside class="sidebar">
+      <button class="nav active" data-tab="dashboard">Dashboard</button>
+      <button class="nav" data-tab="staking">Staking</button>
+      <button class="nav" data-tab="bluechip">Blue-Chip</button>
+      <button class="nav" data-tab="governance">Governance DAO</button>
+      <button class="nav" data-tab="treasury">Treasury</button>
+      <button class="nav" data-tab="guardian">DRS / Guardian</button>
+      <button class="nav" data-tab="settings">Deployment</button>
+      <div class="side-note">Testnet-first • Polygon Amoy • Fail-closed UI</div>
+    </aside>
+
+    <section class="content">
+      <section id="dashboard" class="tab active">
+        <div class="hero">
+          <div><div class="eyebrow">CATALYST PROTOCOL</div><h1>Protocol Dashboard</h1><p>Read the deployed contracts directly. No deployment address is assumed.</p></div>
+          <div class="hero-pill">CATA <span id="heroBalance">—</span></div>
+        </div>
+        <div class="grid cards">
+          <div class="card"><span>Wallet</span><strong id="walletAddress">Not connected</strong></div>
+          <div class="card"><span>Network</span><strong id="networkName">—</strong></div>
+          <div class="card"><span>CATA Balance</span><strong id="cataBalance">—</strong></div>
+          <div class="card"><span>Wallet Staked</span><strong id="stakedCount">—</strong></div>
+          <div class="card"><span>Global Capacity Left</span><strong id="globalCapacity">—</strong></div>
+          <div class="card"><span>Treasury CATA</span><strong id="treasuryBalance">—</strong></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2>Protocol integrity</h2><span id="integrityStatus" class="badge warn">Configure addresses</span></div>
+          <div id="integrityList" class="status-list"></div>
+        </div>
+      </section>
+
+      <section id="staking" class="tab">
+        <div class="section-title"><div><div class="eyebrow">NFT UTILITY</div><h1>Staking</h1></div></div>
+        <div class="grid two">
+          <div class="panel">
+            <h2>Stake NFT</h2>
+            <label>Collection address<input id="stakeCollection" placeholder="0x..."></label>
+            <label>Token ID<input id="stakeTokenId" inputmode="numeric" placeholder="1"></label>
+            <div class="actions"><button id="stakeTermBtn" class="primary">Stake Term</button><button id="stakePermanentBtn">Stake Permanent</button></div>
+          </div>
+          <div class="panel">
+            <h2>Position</h2>
+            <label>Position ID<input id="positionId" inputmode="numeric" placeholder="1"></label>
+            <button id="positionReadBtn">Read Position</button>
+            <div id="positionResult" class="result"></div>
+            <div class="actions"><button id="harvestBtn" class="primary">Harvest</button><button id="unstakeBtn">Unstake</button></div>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>Batch operations</h2>
+          <p class="muted">Use comma-separated values. Batch size is bounded by the contract.</p>
+          <label>Collections<input id="batchCollections" placeholder="0xabc...,0xdef..."></label>
+          <label>Token IDs<input id="batchTokenIds" placeholder="1,2"></label>
+          <div class="actions"><button id="batchTermBtn">Batch Term</button><button id="batchPermanentBtn">Batch Permanent</button></div>
+          <label>Position IDs<input id="batchPositionIds" placeholder="1,2,3"></label>
+          <div class="actions"><button id="batchHarvestBtn">Batch Harvest</button><button id="batchUnstakeBtn">Batch Unstake</button></div>
+        </div>
+      </section>
+
+      <section id="bluechip" class="tab">
+        <div class="section-title"><div><div class="eyebrow">CURATION</div><h1>Blue-Chip</h1></div></div>
+        <div class="notice">Blue-Chip status is a protocol curation state. It is not a guarantee of safety, authenticity, value, or profitability.</div>
+        <div class="panel">
+          <h2>Check collection</h2>
+          <label>Collection address<input id="tierCollection" placeholder="0x..."></label>
+          <button id="tierReadBtn">Read Tier & Metrics</button>
+          <div id="tierResult" class="result"></div>
+        </div>
+        <div class="panel">
+          <h2>Reward-access wallet fee</h2>
+          <label>Blue-Chip collection<input id="blueCollection" placeholder="0x..."></label>
+          <button id="blueFeeBtn" class="primary">Pay 50 CATA Fee</button>
+        </div>
+      </section>
+
+      <section id="governance" class="tab">
+        <div class="section-title"><div><div class="eyebrow">BWCG</div><h1>Governance DAO</h1></div></div>
+        <div class="grid cards">
+          <div class="card"><span>Your voting units</span><strong id="votingUnits">—</strong></div>
+          <div class="card"><span>Snapshot block</span><strong id="latestBlock">—</strong></div>
+          <div class="card"><span>Voting period</span><strong>7 days</strong></div>
+          <div class="card"><span>Timelock</span><strong>48 hours</strong></div>
+        </div>
+        <div class="panel">
+          <h2>Read proposal</h2>
+          <label>Proposal ID<input id="proposalId" inputmode="numeric" placeholder="1"></label>
+          <button id="proposalReadBtn">Load Proposal</button>
+          <div id="proposalResult" class="result"></div>
+          <div class="actions"><button id="voteForBtn" class="primary">Vote For</button><button id="voteAgainstBtn">Vote Against</button><button id="queueBtn">Queue</button><button id="executeBtn">Execute</button></div>
+        </div>
+        <div class="panel">
+          <h2>Create proposal</h2>
+          <p class="muted">One action per line. Targets, ETH values and calldata must be valid. The DApp does not invent governance actions.</p>
+          <label>Target addresses<input id="propTargets" placeholder="0x..."></label>
+          <label>ETH values<input id="propValues" placeholder="0,0"></label>
+          <label>Calldata<input id="propCalldata" placeholder="0x..."></label>
+          <label>Description<textarea id="propDescription" placeholder="Explain the proposal"></textarea></label>
+          <button id="proposeBtn" class="primary">Create Proposal</button>
+        </div>
+      </section>
+
+      <section id="treasury" class="tab">
+        <div class="section-title"><div><div class="eyebrow">9% ALLOCATION</div><h1>Treasury</h1></div></div>
+        <div class="grid cards"><div class="card"><span>Available CATA</span><strong id="treasuryRead">—</strong></div></div>
+        <div class="panel">
+          <h2>Treasury status</h2><p class="muted">Treasury spending is governance-controlled. This UI does not expose an owner withdrawal path.</p>
+          <button id="treasuryRefreshBtn">Refresh Treasury</button>
+        </div>
+      </section>
+
+      <section id="guardian" class="tab">
+        <div class="section-title"><div><div class="eyebrow">DRS</div><h1>Guardian Council</h1></div></div>
+        <div class="grid two">
+          <div class="panel"><h2>Active Guardians</h2><div id="activeGuardians" class="address-list">—</div></div>
+          <div class="panel"><h2>Standby Guardians</h2><div id="standbyGuardians" class="address-list">—</div></div>
+        </div>
+        <div class="panel">
+          <h2>Recovery proposal</h2>
+          <label>Proposal ID<input id="recoveryId" inputmode="numeric" placeholder="1"></label>
+          <button id="recoveryReadBtn">Load Recovery</button>
+          <div id="recoveryResult" class="result"></div>
+          <div class="actions"><button id="recoveryApproveBtn">Approve</button><button id="recoveryExecuteBtn" class="primary">Execute</button><button id="recoveryVetoBtn">Veto</button><button id="recoveryExpireBtn">Mark Expired</button></div>
+        </div>
+        <div class="panel">
+          <h2>Propose recovery</h2>
+          <label>Target<input id="recoveryTarget" placeholder="0x..."></label>
+          <label>Calldata<input id="recoveryData" placeholder="0x..."></label>
+          <button id="recoveryProposeBtn" class="primary">Propose Recovery</button>
+          <p class="muted">Ordinary recovery remains subject to the mandatory four-hour delay and guardian thresholds.</p>
+        </div>
+      </section>
+
+      <section id="settings" class="tab">
+        <div class="section-title"><div><div class="eyebrow">RELEASE CONFIGURATION</div><h1>Deployment</h1></div></div>
+        <div class="notice">Enter the actual Polygon Amoy contract addresses from your deployment. These fields are saved only in this browser. Do not paste private keys or seed phrases.</div>
+        <div class="panel config">
+          <label>Chain ID<input id="cfgChainId" value="80002"></label>
+          <label>CATA Token<input id="cfgToken" placeholder="0x..."></label>
+          <label>Registry<input id="cfgRegistry" placeholder="0x..."></label>
+          <label>Staking<input id="cfgStaking" placeholder="0x..."></label>
+          <label>Governance<input id="cfgGovernance" placeholder="0x..."></label>
+          <label>Treasury<input id="cfgTreasury" placeholder="0x..."></label>
+          <label>Guardian<input id="cfgGuardian" placeholder="0x..."></label>
+          <div class="actions"><button id="saveConfigBtn" class="primary">Save Deployment</button><button id="clearConfigBtn">Clear</button></div>
+        </div>
+        <div class="panel"><h2>Release checklist</h2><div class="checklist">
+          <div>☐ Exact compiled ABIs loaded</div><div>☐ Contract addresses verified</div><div>☐ Correct chain ID</div><div>☐ Bytecode exists at every configured address</div><div>☐ Independent tests and audit completed before mainnet</div>
+        </div></div>
+      </section>
+    </section>
+  </main>
+</div>
+<div id="toast" class="toast"></div>
+<div id="modal" class="modal hidden"><div class="modal-box"><h2>Transaction confirmation</h2><div id="modalBody"></div><div class="actions"><button id="modalCancel">Cancel</button><button id="modalConfirm" class="primary">Confirm</button></div></div></div>
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.15.0/dist/ethers.umd.min.js"></script>
+<script type="module" src="./app.js"></script>
+</body>
+</html>
