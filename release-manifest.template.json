@@ -1,0 +1,31 @@
+{
+  "project": "Catalyst",
+  "specification": "Mainnet Readiness Revision v1.1 (Proposed)",
+  "targetNetwork": {
+    "name": "Polygon PoS",
+    "chainId": 137
+  },
+  "testNetwork": {
+    "name": "Polygon Amoy",
+    "chainId": 80002
+  },
+  "releaseStatus": "NOT_RELEASED",
+  "addresses": {},
+  "compiler": {
+    "solidity": "0.8.28",
+    "optimizer": true,
+    "runs": 200,
+    "viaIR": true
+  },
+  "dependencies": {
+    "openzeppelinContracts": "5.2.0",
+    "openzeppelinContractsUpgradeable": "5.2.0"
+  },
+  "audit": {
+    "status": "NOT_AUDITED",
+    "report": null
+  },
+  "notes": [
+    "Template only; fill addresses and code hashes after verified deployment."
+  ]
+}
