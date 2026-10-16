@@ -23,6 +23,7 @@
     <aside class="sidebar">
       <button class="nav active" data-tab="dashboard">Dashboard</button>
       <button class="nav" data-tab="staking">Staking</button>
+      <button class="nav" data-tab="registry">Registry</button>
       <button class="nav" data-tab="bluechip">Blue-Chip</button>
       <button class="nav" data-tab="governance">Governance DAO</button>
       <button class="nav" data-tab="treasury">Treasury</button>
@@ -79,7 +80,74 @@
         </div>
       </section>
 
-      <section id="bluechip" class="tab">
+      
+<section id="registry" class="tab">
+  <div class="section-title">
+    <div>
+      <div class="eyebrow">COLLECTION REGISTRY</div>
+      <h1>Registry</h1>
+    </div>
+  </div>
+
+  <div class="notice">
+    Register ERC-721 collections, track verification metrics, and manage expired
+    unverified escrow. Registration requires 100 CATA plus a 500 CATA refundable
+    escrow. The contract applies the protocol's 90/9/1 fee split to applicable fees.
+  </div>
+
+  <div class="grid two">
+    <div class="panel">
+      <h2>Register NFT Collection</h2>
+      <label>ERC-721 Collection
+        <input id="registryCollection" placeholder="0x...">
+      </label>
+      <div class="result" id="registryFeePreview">
+        Required: 600 CATA — 100 CATA registration fee + 500 CATA escrow
+      </div>
+      <div class="actions">
+        <button id="registryApproveBtn">Approve 600 CATA</button>
+        <button id="registryRegisterBtn" class="primary">Register Collection</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Collection Status</h2>
+      <label>Collection Address
+        <input id="registryReadCollection" placeholder="0x...">
+      </label>
+      <button id="registryReadBtn">Read Registry</button>
+      <div id="registryResult" class="result"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Batch Register</h2>
+    <p class="muted">Maximum 20 collections per transaction. Each collection requires 600 CATA total.</p>
+    <label>Collection addresses
+      <textarea id="registryBatchCollections" placeholder="0xabc...,0xdef..."></textarea>
+    </label>
+    <div id="registryBatchPreview" class="result">
+      Required: 600 CATA × number of collections
+    </div>
+    <div class="actions">
+      <button id="registryBatchApproveBtn">Approve Batch CATA</button>
+      <button id="registryBatchRegisterBtn" class="primary">Batch Register</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Expired Escrow</h2>
+    <p class="muted">Anyone may finalize an expired Unverified collection. The 500 CATA escrow is forfeited and distributed according to the contract.</p>
+    <label>Collection Address
+      <input id="registryExpireCollection" placeholder="0x...">
+    </label>
+    <div class="actions">
+      <button id="registryExpireBtn">Finalize Expired Escrow</button>
+    </div>
+  </div>
+</section>
+
+<section id="bluechip" class="tab">
         <div class="section-title"><div><div class="eyebrow">CURATION</div><h1>Blue-Chip</h1></div></div>
         <div class="notice">Blue-Chip status is a protocol curation state. It is not a guarantee of safety, authenticity, value, or profitability.</div>
         <div class="panel">
@@ -543,6 +611,351 @@
   ["cfgChainId","cfgToken","cfgRegistry","cfgStaking","cfgGovernance","cfgTreasury","cfgGuardian"]
     .forEach(id => $(id)?.addEventListener("input", validateDeployment));
 
+
+  // -----------------------------
+  // REGISTRY
+  // -----------------------------
+  const REGISTRY_ABI = [
+    "function REGISTRATION_FEE() view returns (uint256)",
+    "function UNVERIFIED_ESCROW() view returns (uint256)",
+    "function BLUE_CHIP_WALLET_FEE() view returns (uint256)",
+    "function isRegistered(address) view returns (bool)",
+    "function collections(address) view returns (address registrant,uint8 tier,uint256 registeredAt,uint256 escrowDeadline,uint256 distinctStakingWallets,uint256 totalStakeDays,bool escrowSettled,bool hasUnresolvedSecurityIncident)",
+    "function getCollectionTier(address) view returns (uint8)",
+    "function getCollectionMetrics(address) view returns (uint256 distinctWallets,uint256 totalStakeDays,uint256 burnsLast90Days,bool unresolvedIncident,uint256 escrowDeadline,bool escrowSettled)",
+    "function meetsVerificationMetrics(address) view returns (bool)",
+    "function rolling90DayNetBurns(address) view returns (uint256)",
+    "function registerCollection(address)",
+    "function batchRegisterCollections(address[])",
+    "function finalizeExpiredEscrow(address)",
+    "function batchFinalizeExpiredEscrows(address[])",
+    "function payBlueChipWalletFee(address)",
+    "function batchPayBlueChipWalletFee(address[])"
+  ];
+
+  const CATA_ERC20_ABI = [
+    "function allowance(address owner,address spender) view returns (uint256)",
+    "function approve(address spender,uint256 amount) returns (bool)",
+    "function balanceOf(address owner) view returns (uint256)",
+    "function decimals() view returns (uint8)",
+    "function symbol() view returns (string)"
+  ];
+
+  function configuredAddress(id) {
+    const value = $(id)?.value?.trim();
+    return value && ethers.isAddress(value) ? value : null;
+  }
+
+  function requireConnected() {
+    if (!account || !signer || !provider) {
+      toast("Connect your wallet first", false);
+      setSafety("Connect a wallet before using Registry actions.", true);
+      return false;
+    }
+    return true;
+  }
+
+  async function requireAmoy() {
+    if (!(await requireConnected())) return false;
+    const chainId = await getChainId();
+    if (chainId !== AMOY_CHAIN_ID) {
+      toast("Switch to Polygon Amoy first", false);
+      setSafety("Wrong network. Catalyst Registry requires Polygon Amoy (80002).", true);
+      return false;
+    }
+    return true;
+  }
+
+  function getRegistry() {
+    const address = configuredAddress("cfgRegistry");
+    if (!address) throw new Error("Configure the Registry contract address first.");
+    return new ethers.Contract(address, REGISTRY_ABI, signer || provider);
+  }
+
+  function getCata() {
+    const address = configuredAddress("cfgToken");
+    if (!address) throw new Error("Configure the CATA Token contract address first.");
+    return new ethers.Contract(address, CATA_ERC20_ABI, signer || provider);
+  }
+
+  function parseAddressList(text) {
+    const list = (text || "")
+      .split(/[\s,]+/)
+      .map(x => x.trim())
+      .filter(Boolean);
+
+    if (!list.length) throw new Error("Enter at least one collection address.");
+    if (list.length > 20) throw new Error("Maximum batch size is 20.");
+    for (const address of list) {
+      if (!ethers.isAddress(address)) {
+        throw new Error("Invalid collection address: " + address);
+      }
+    }
+    return list;
+  }
+
+  async function approveCataForRegistry(amount) {
+    if (!(await requireAmoy())) return;
+
+    const registryAddress = configuredAddress("cfgRegistry");
+    if (!registryAddress) throw new Error("Configure the Registry address first.");
+
+    const cata = getCata();
+    const decimals = await cata.decimals().catch(() => 18);
+    const amountUnits = ethers.parseUnits(String(amount), decimals);
+
+    const currentAllowance = await cata.allowance(account, registryAddress);
+
+    if (currentAllowance >= amountUnits) {
+      toast("CATA allowance already sufficient");
+      return;
+    }
+
+    toast("Waiting for wallet approval...");
+    const tx = await cata.approve(registryAddress, amountUnits);
+    toast("Approval submitted: " + tx.hash.slice(0, 10) + "…");
+    await tx.wait();
+    toast("CATA approval confirmed");
+  }
+
+  async function updateRegistryPreview() {
+    try {
+      const registry = getRegistry();
+      const [fee, escrow] = await Promise.all([
+        registry.REGISTRATION_FEE(),
+        registry.UNVERIFIED_ESCROW()
+      ]);
+      const cata = getCata();
+      const decimals = await cata.decimals().catch(() => 18);
+      const total = fee + escrow;
+
+      if ($("registryFeePreview")) {
+        $("registryFeePreview").textContent =
+          "Required: " + ethers.formatUnits(total, decimals) +
+          " CATA — " + ethers.formatUnits(fee, decimals) +
+          " registration + " + ethers.formatUnits(escrow, decimals) + " escrow";
+      }
+    } catch (e) {
+      console.warn("Registry fee preview:", e);
+    }
+  }
+
+  function tierName(tier) {
+    return ["Unregistered", "Unverified", "Verified", "Blue-Chip"][Number(tier)] || "Unknown";
+  }
+
+  function formatTimestamp(ts) {
+    const n = Number(ts);
+    if (!n) return "—";
+    return new Date(n * 1000).toLocaleString();
+  }
+
+  async function readRegistry() {
+    if (!(await requireAmoy())) return;
+
+    try {
+      const collection = $("registryReadCollection").value.trim();
+      if (!ethers.isAddress(collection)) throw new Error("Enter a valid collection address.");
+
+      const registry = getRegistry();
+      const [registered, tier, metrics, info] = await Promise.all([
+        registry.isRegistered(collection),
+        registry.getCollectionTier(collection),
+        registry.getCollectionMetrics(collection),
+        registry.collections(collection)
+      ]);
+
+      const [distinctWallets, totalStakeDays, burnsLast90Days, unresolvedIncident, escrowDeadline, escrowSettled] = metrics;
+
+      let decimals = 18;
+      try { decimals = await getCata().decimals(); } catch (_) {}
+
+      $("registryResult").innerHTML = `
+        <div><strong>Registered:</strong> ${registered ? "Yes" : "No"}</div>
+        <div><strong>Tier:</strong> ${tierName(tier)}</div>
+        <div><strong>Registrant:</strong> ${info.registrant}</div>
+        <div><strong>Distinct staking wallets:</strong> ${distinctWallets}</div>
+        <div><strong>Total stake-days:</strong> ${totalStakeDays}</div>
+        <div><strong>Net burns, rolling 90 days:</strong> ${ethers.formatUnits(burnsLast90Days, decimals)} CATA</div>
+        <div><strong>Security incident:</strong> ${unresolvedIncident ? "Unresolved" : "None"}</div>
+        <div><strong>Escrow deadline:</strong> ${formatTimestamp(escrowDeadline)}</div>
+        <div><strong>Escrow settled:</strong> ${escrowSettled ? "Yes" : "No"}</div>
+        <div><strong>Verification metrics:</strong> ${await registry.meetsVerificationMetrics(collection) ? "Satisfied" : "Not satisfied"}</div>
+      `;
+      toast("Registry data loaded");
+    } catch (err) {
+      console.error(err);
+      $("registryResult").textContent = err?.shortMessage || err?.message || "Registry read failed.";
+      toast("Registry read failed", false);
+    }
+  }
+
+  async function registerCollection() {
+    if (!(await requireAmoy())) return;
+
+    try {
+      const collection = $("registryCollection").value.trim();
+      if (!ethers.isAddress(collection)) throw new Error("Enter a valid ERC-721 collection address.");
+
+      const registry = getRegistry();
+      const fee = await registry.REGISTRATION_FEE();
+      const escrow = await registry.UNVERIFIED_ESCROW();
+      const total = fee + escrow;
+
+      const cata = getCata();
+      const allowance = await cata.allowance(account, configuredAddress("cfgRegistry"));
+
+      if (allowance < total) {
+        const decimals = await cata.decimals().catch(() => 18);
+        const answer = window.confirm(
+          "Registry registration requires " +
+          ethers.formatUnits(total, decimals) +
+          " CATA total.\n\nApprove the Registry to spend this amount?"
+        );
+        if (!answer) return;
+        const approvalTx = await cata.approve(configuredAddress("cfgRegistry"), total);
+        toast("CATA approval submitted");
+        await approvalTx.wait();
+        toast("CATA approval confirmed");
+      }
+
+      const preview = "100 CATA registration fee + 500 CATA refundable escrow";
+      if (!window.confirm("Register this ERC-721 collection?\n\n" + preview)) return;
+
+      toast("Waiting for wallet approval...");
+      const tx = await registry.registerCollection(collection);
+      toast("Registration submitted: " + tx.hash.slice(0, 10) + "…");
+      await tx.wait();
+      toast("Collection registered successfully");
+
+      $("registryReadCollection").value = collection;
+      await readRegistry();
+    } catch (err) {
+      console.error(err);
+      toast(err?.shortMessage || err?.reason || "Registration failed", false);
+    }
+  }
+
+  async function batchRegisterCollections() {
+    if (!(await requireAmoy())) return;
+
+    try {
+      const collections = parseAddressList($("registryBatchCollections").value);
+      const registry = getRegistry();
+      const [fee, escrow] = await Promise.all([
+        registry.REGISTRATION_FEE(),
+        registry.UNVERIFIED_ESCROW()
+      ]);
+      const total = (fee + escrow) * BigInt(collections.length);
+
+      const cata = getCata();
+      const decimals = await cata.decimals().catch(() => 18);
+      const amountText = ethers.formatUnits(total, decimals);
+
+      if (!window.confirm(
+        "Batch-register " + collections.length + " collections?\n\n" +
+        "Required CATA: " + amountText +
+        "\nMaximum batch size: 20"
+      )) return;
+
+      const allowance = await cata.allowance(account, configuredAddress("cfgRegistry"));
+      if (allowance < total) {
+        const approvalTx = await cata.approve(configuredAddress("cfgRegistry"), total);
+        toast("Batch CATA approval submitted");
+        await approvalTx.wait();
+        toast("Batch CATA approval confirmed");
+      }
+
+      toast("Waiting for wallet approval...");
+      const tx = await registry.batchRegisterCollections(collections);
+      toast("Batch registration submitted");
+      await tx.wait();
+      toast("Batch registration confirmed");
+    } catch (err) {
+      console.error(err);
+      toast(err?.shortMessage || err?.reason || "Batch registration failed", false);
+    }
+  }
+
+  async function finalizeRegistryEscrow() {
+    if (!(await requireAmoy())) return;
+
+    try {
+      const collection = $("registryExpireCollection").value.trim();
+      if (!ethers.isAddress(collection)) throw new Error("Enter a valid collection address.");
+
+      if (!window.confirm("Finalize the expired escrow for this collection?")) return;
+
+      const registry = getRegistry();
+      toast("Waiting for wallet approval...");
+      const tx = await registry.finalizeExpiredEscrow(collection);
+      toast("Escrow finalization submitted");
+      await tx.wait();
+      toast("Expired escrow finalized");
+      $("registryReadCollection").value = collection;
+      await readRegistry();
+    } catch (err) {
+      console.error(err);
+      toast(err?.shortMessage || err?.reason || "Escrow finalization failed", false);
+    }
+  }
+
+  $("registryApproveBtn")?.addEventListener("click", async () => {
+    try {
+      const registry = getRegistry();
+      const [fee, escrow] = await Promise.all([
+        registry.REGISTRATION_FEE(),
+        registry.UNVERIFIED_ESCROW()
+      ]);
+      const decimals = await getCata().decimals().catch(() => 18);
+      await approveCataForRegistry(ethers.formatUnits(fee + escrow, decimals));
+    } catch (err) {
+      toast(err?.message || "Approval failed", false);
+    }
+  });
+
+  $("registryRegisterBtn")?.addEventListener("click", registerCollection);
+  $("registryBatchApproveBtn")?.addEventListener("click", async () => {
+    try {
+      const collections = parseAddressList($("registryBatchCollections").value);
+      const registry = getRegistry();
+      const [fee, escrow] = await Promise.all([
+        registry.REGISTRATION_FEE(),
+        registry.UNVERIFIED_ESCROW()
+      ]);
+      const decimals = await getCata().decimals().catch(() => 18);
+      await approveCataForRegistry(
+        ethers.formatUnits((fee + escrow) * BigInt(collections.length), decimals)
+      );
+    } catch (err) {
+      toast(err?.message || "Batch approval failed", false);
+    }
+  });
+  $("registryBatchRegisterBtn")?.addEventListener("click", batchRegisterCollections);
+  $("registryReadBtn")?.addEventListener("click", readRegistry);
+  $("registryExpireBtn")?.addEventListener("click", finalizeRegistryEscrow);
+
+  $("registryCollection")?.addEventListener("input", () => {
+    $("registryReadCollection").value = $("registryCollection").value;
+  });
+
+  $("registryBatchCollections")?.addEventListener("input", async () => {
+    try {
+      const count = parseAddressList($("registryBatchCollections").value).length;
+      const registry = getRegistry();
+      const [fee, escrow] = await Promise.all([
+        registry.REGISTRATION_FEE(),
+        registry.UNVERIFIED_ESCROW()
+      ]);
+      const decimals = await getCata().decimals().catch(() => 18);
+      $("registryBatchPreview").textContent =
+        "Required: " + ethers.formatUnits((fee + escrow) * BigInt(count), decimals) +
+        " CATA for " + count + " collection(s)";
+    } catch (_) {
+      $("registryBatchPreview").textContent = "Required: 600 CATA × number of collections";
+    }
+  });
+
   // -----------------------------
   // SAFE PLACEHOLDER HANDLERS
   // -----------------------------
@@ -551,7 +964,7 @@
   const contractButtons = [
     "stakeTermBtn","stakePermanentBtn","positionReadBtn","harvestBtn","unstakeBtn",
     "batchTermBtn","batchPermanentBtn","batchHarvestBtn","batchUnstakeBtn",
-    "tierReadBtn","blueFeeBtn","proposalReadBtn","voteForBtn","voteAgainstBtn",
+    "proposalReadBtn","voteForBtn","voteAgainstBtn",
     "queueBtn","executeBtn","proposeBtn","treasuryRefreshBtn",
     "recoveryReadBtn","recoveryApproveBtn","recoveryExecuteBtn","recoveryVetoBtn",
     "recoveryExpireBtn","recoveryProposeBtn"
